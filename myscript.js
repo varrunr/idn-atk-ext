@@ -1,13 +1,23 @@
 function isSpoofed(url)
 {
-	return false;
+	return true;
+}
+
+function getAcceptLanguages() {
+  chrome.i18n.getAcceptLanguages(function(languageList) {
+    var languages = languageList.join(",");
+    alert(languages);
+    setChildTextNode('languageSpan',
+        chrome.i18n.getMessage("chrome_accept_languages", languages));
+  })
 }
 
 function checkForSpoofedUrl(tabId, changeInfo, tab)
 {
 	// If url contains a 'z'
-	if (tab.url.indexOf('z') > -1) 
-	{	
+	//alert(tab.url);
+	if (tab.url.indexOf('x') > -1) 
+	{
     	if ( isSpoofed(tab.url) )
     	{
     		chrome.tabs.update(tabId, {url:"chrome://newtab"});

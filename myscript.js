@@ -316,7 +316,43 @@
 				: string;
 		});
 	}
-
+	/**
+	 * Converts a Unicode string representing a domain name to Punycode. Only the
+	 * non-ASCII parts of the domain name will be converted, i.e. it doesn't
+	 * matter if you call it with a domain that's already in ASCII.
+	 * @memberOf punycode
+	 * @param {String} domain The domain name to convert, as a Unicode string.
+	 * @returns {String} The Punycode representation of the given domain name.
+	 */
+	function toASCII(domain) {
+		return mapDomain(domain, function(string) {
+			return regexNonASCII.test(string)
+				? 'xn--' + encode(string)
+				: string;
+		});
+	}
+	
+function getranking(reqUrl)
+{
+	var req;
+	req=new XMLHttpRequest();
+	req.open(	"GET",
+				"http://data.alexa.com/data?"+"cli=10&"+"url="+reqUrl,
+				false);
+	req.send(null);
+	var ranking=req.responseXML.getElementsByTagName('POPULARITY');
+	if(ranking[0] == undefined){ 
+		return -1;
+	}
+	var websiteranking=ranking[0].getAttribute("TEXT");
+	
+	if(websiteranking){
+		return websiteranking;
+	}
+	else{
+		return -1;
+	}
+}
 
 function createConfusableMatrix()
 {	
@@ -435,7 +471,16 @@ function checkURL(URL)
 	var spoofedUrls = new Array();
 	
 	permute(confusion, url,  path , 0 , spoofedUrls);
-	console.log(spoofedUrls.length);		
+	
+	var rankings = new Array();
+	var  i = 0;
+	var pUrl = '';
+	
+	for(i = 0;i<spoofedUrls.length;i++){
+		debugger;
+		pUrl = toASCII(spoofedUrls[i]);
+		console.log(pUrl + ' rank: ' + getranking(pUrl));
+	}
 	
 }
 

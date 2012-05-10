@@ -461,7 +461,7 @@ function str2arr(path)
 	return arr;
 }
 
-function checkURL(URL)
+function checkURL(URL,tld)
 {
 	var url = str2arr(URL);
 	
@@ -473,51 +473,78 @@ function checkURL(URL)
 	permute(confusion, url,  path , 0 , spoofedUrls);
 	
 	var rankings = new Array();
+	var idnattacks = new Array();
 	var  i = 0;
-	var pUrl = '';
 	
 	for(i = 0;i<spoofedUrls.length;i++){
-		debugger;
-		pUrl = toASCII(spoofedUrls[i]);
-		console.log(pUrl + ' rank: ' + getranking(pUrl));
+		var pUrl = toASCII( spoofedUrls[i]+ '.' + tld);
+		var rank = getranking(pUrl);
+		if(rank != -1)
+		{
+			idnattacks.push(pUrl);
+			rankings.push(rank);
+			console.log('Unicode:'+ spoofedUrls[i] + tld + ' Punycode:' + toASCII(pUrl) + ' rank:' + rank);
+		}
 	}
+	// TODO: Sort them
+	// Send message to UI to display
+	if(idnattacks.length > 0){
+	console.log('This url can be confused with ' + idnattacks.length + ' other URLS. Blocking Access');
+	}
+	return idnattacks.length;
 	
 }
 
-function isSpoofed(uniUrl){
-	checkURL(uniUrl);
-	return true;
+function isSpoofed(uniUrl,tld){
+	if(checkURL(uniUrl,tld)){
+		return true;
+	}
+	return false;
 };
 
-function checkForSpoofedUrl(tabId, changeInfo, tab)
+
+function checkForSpoofedUrl2(requestUrl)
 {
 	// Get url from tab
-	if(tab.url.length >= 9)
+	if(requestUrl.length >= 9)
 	{
-		if(tab.url.substr(0,9) == 'chrome://'){
-			return;
+		if(requestUrl.substr(0,9) == 'chrome://'){
+			return false;
 		}
 	}
 	
 	var lnk = document.createElement('a');
-	lnk.href = tab.url;
+	lnk.href = requestUrl;
 	var domain = (lnk.host.match(/([^.]+)\.\w{2,3}(?:\.\w{2})?$/) || [])[0];
 	if(domain == undefined){
-		return;
+		return false;
 	}
 	
 	var prefix = 'na';
 	if(domain.length >= 4){
 		prefix = domain.substring(0,4);
 		if(prefix != 'xn--'){
-			return;
+			return false;
 		}
 	}
-	var uniUrl = '';
-	var uniUrl = toUnicode(domain);
-	isSpoofed(uniUrl);
-	
+	console.log(domain + ' is an international domain');
+	var tld = domain.split('.', 2)[1];
+	var dName = domain.split('.',2)[0];
+	if( tld.length < 3){
+		return false;
+	}
+	var uniUrl = toUnicode(dName);
+	if(isSpoofed(uniUrl, tld)){
+		return true;
+	}
+	else{
+		return false;
+	}
 };
 
-// Listen for any changes to the URL of any tab.
-chrome.tabs.onUpdated.addListener(checkForSpoofedUrl);
+chrome.webRequest.onBeforeRequest.addListener(
+  function(details) { 
+  return {cancel: checkForSpoofedUrl2(details.url)}; 
+  },
+  {urls: ["http://*/*"]},
+  ["blocking"]);

@@ -1,7 +1,9 @@
-/*! http://mths.be/punycode by @mathias */
-
-/*! http://mths.be/punycode by @mathias */
-
+/* 
+ * Puncode conversion code written by @mathias
+ * http://mths.be/punycode
+ *
+ */
+	
 	/** Highest positive signed 32-bit float value */
 	maxInt = 2147483647, // aka. 0x7FFFFFFF or 2^31-1
 
@@ -32,30 +34,12 @@
 	baseMinusTMin = base - tMin,
 	floor = Math.floor,
 	stringFromCharCode = String.fromCharCode,
-
-	/** Temporary variable */
 	key;
 
-	/*--------------------------------------------------------------------------*/
-
-	/**
-	 * A generic error utility function.
-	 * @private
-	 * @param {String} type The error type.
-	 * @returns {Error} Throws a `RangeError` with the applicable error message.
-	 */
 	function error(type) {
 		throw RangeError(errors[type]);
 	}
 
-	/**
-	 * A generic `Array#map` utility function.
-	 * @private
-	 * @param {Array} array The array to iterate over.
-	 * @param {Function} callback The function that gets called for every array
-	 * item.
-	 * @returns {Array} A new array of values returned by the callback function.
-	 */
 	function map(array, fn) {
 		var length = array.length;
 		while (length--) {
@@ -64,33 +48,11 @@
 		return array;
 	}
 
-	/**
-	 * A simple `Array#map`-like wrapper to work with domain name strings.
-	 * @private
-	 * @param {String} domain The domain name.
-	 * @param {Function} callback The function that gets called for every
-	 * character.
-	 * @returns {Array} A new string of characters returned by the callback
-	 * function.
-	 */
 	function mapDomain(string, fn) {
 		var glue = '.';
 		return map(string.split(glue), fn).join(glue);
 	}
 
-	/**
-	 * Creates an array containing the decimal code points of each Unicode
-	 * character in the string. While JavaScript uses UCS-2 internally,
-	 * this function will convert a pair of surrogate halves (each of which
-	 * UCS-2 exposes as separate characters) into a single code point,
-	 * matching UTF-16.
-	 * @see `punycode.ucs2.encode`
-	 * @see <http://mathiasbynens.be/notes/javascript-encoding>
-	 * @memberOf punycode.ucs2
-	 * @name decode
-	 * @param {String} string The Unicode input string (UCS-2).
-	 * @returns {Array} The new array of code points.
-	 */
 	function ucs2decode(string) {
 		var output = [],
 		    counter = 0,
@@ -111,14 +73,6 @@
 		return output;
 	}
 
-	/**
-	 * Creates a string based on an array of decimal code points.
-	 * @see `punycode.ucs2.decode`
-	 * @memberOf punycode.ucs2
-	 * @name encode
-	 * @param {Array} codePoints The array of decimal code points.
-	 * @returns {String} The new Unicode string (UCS-2).
-	 */
 	function ucs2encode(array) {
 		return map(array, function(value) {
 			var output = '';
@@ -135,15 +89,6 @@
 		}).join('');
 	}
 
-	/**
-	 * Converts a basic code point into a digit/integer.
-	 * @see `digitToBasic()`
-	 * @private
-	 * @param {Number} codePoint The basic (decimal) code point.
-	 * @returns {Number} The numeric value of a basic code point (for use in
-	 * representing integers) in the range `0` to `base - 1`, or `base` if
-	 * the code point does not represent a value.
-	 */
 	function basicToDigit(codePoint) {
 		return codePoint - 48 < 10
 			? codePoint - 22
@@ -154,28 +99,13 @@
 					: base;
 	}
 
-	/**
-	 * Converts a digit/integer into a basic code point.
-	 * @see `basicToDigit()`
-	 * @private
-	 * @param {Number} digit The numeric value of a basic code point.
-	 * @returns {Number} The basic code point whose value (when used for
-	 * representing integers) is `digit`, which needs to be in the range
-	 * `0` to `base - 1`. If `flag` is non-zero, the uppercase form is
-	 * used; else, the lowercase form is used. The behavior is undefined
-	 * if flag is non-zero and `digit` has no uppercase form.
-	 */
 	function digitToBasic(digit, flag) {
 		//  0..25 map to ASCII a..z or A..Z
 		// 26..35 map to ASCII 0..9
 		return digit + 22 + 75 * (digit < 26) - ((flag != 0) << 5);
 	}
 
-	/**
-	 * Bias adaptation function as per section 3.4 of RFC 3492.
-	 * http://tools.ietf.org/html/rfc3492#section-3.4
-	 * @private
-	 */
+
 	function adapt(delta, numPoints, firstTime) {
 		var k = 0;
 		delta = firstTime ? floor(delta / damp) : delta >> 1;
@@ -186,27 +116,11 @@
 		return floor(k + (baseMinusTMin + 1) * delta / (delta + skew));
 	}
 
-	/**
-	 * Converts a basic code point to lowercase is `flag` is falsy, or to
-	 * uppercase if `flag` is truthy. The code point is unchanged if it's
-	 * caseless. The behavior is undefined if `codePoint` is not a basic code
-	 * point.
-	 * @private
-	 * @param {Number} codePoint The numeric value of a basic code point.
-	 * @returns {Number} The resulting basic code point.
-	 */
 	function encodeBasic(codePoint, flag) {
 		codePoint -= (codePoint - 97 < 26) << 5;
 		return codePoint + (!flag && codePoint - 65 < 26) << 5;
 	}
 
-	/**
-	 * Converts a Punycode string of ASCII code points to a string of Unicode
-	 * code points.
-	 * @memberOf punycode
-	 * @param {String} input The Punycode string of ASCII code points.
-	 * @returns {String} The resulting string of Unicode code points.
-	 */
 	function decode(input) {
 		// Don't use UCS-2
 		var output = [],
@@ -227,10 +141,6 @@
 		    /** Cached calculation results */
 		    baseMinusT;
 
-		// Handle the basic code points: let `basic` be the number of input code
-		// points before the last delimiter, or `0` if there is none, then copy
-		// the first basic code points to the output.
-
 		basic = input.lastIndexOf(delimiter);
 		if (basic < 0) {
 			basic = 0;
@@ -244,16 +154,8 @@
 			output.push(input.charCodeAt(j));
 		}
 
-		// Main decoding loop: start just after the last delimiter if any basic code
-		// points were copied; start at the beginning otherwise.
-
 		for (index = basic > 0 ? basic + 1 : 0; index < inputLength; /* no final expression */) {
 
-			// `index` is the index of the next character to be consumed.
-			// Decode a generalized variable-length integer into `delta`,
-			// which gets added to `i`. The overflow checking is easier
-			// if we increase `i` as we go, then subtract off its starting
-			// value at the end to obtain `delta`.
 			for (oldi = i, w = 1, k = base; /* no condition */; k += base) {
 
 				if (index >= inputLength) {
@@ -281,34 +183,21 @@
 				w *= baseMinusT;
 
 			}
-
 			out = output.length + 1;
 			bias = adapt(i - oldi, out, oldi == 0);
 
-			// `i` was supposed to wrap around from `out` to `0`,
-			// incrementing `n` each time, so we'll fix that now:
 			if (floor(i / out) > maxInt - n) {
 				error('overflow');
 			}
-
 			n += floor(i / out);
 			i %= out;
-
-			// Insert `n` at position `i` of the output
+			
 			output.splice(i++, 0, n);
 
 		}
-
 		return ucs2encode(output);
 	}
 
-	/**
-	 * Converts a string of Unicode code points to a Punycode string of ASCII
-	 * code points.
-	 * @memberOf punycode
-	 * @param {String} input The string of Unicode code points.
-	 * @returns {String} The resulting Punycode string of ASCII code points.
-	 */
 	function encode(input) {
 		var n,
 		    delta,
@@ -349,9 +238,6 @@
 		}
 
 		handledCPCount = basicLength = output.length;
-
-		// `handledCPCount` is the number of code points that have been handled;
-		// `basicLength` is the number of basic code points.
 
 		// Finish the basic string - if it is not empty - with a delimiter
 		if (basicLength) {
@@ -421,11 +307,8 @@
 	 * Punycoded parts of the domain name will be converted, i.e. it doesn't
 	 * matter if you call it on a string that has already been converted to
 	 * Unicode.
-	 * @memberOf punycode
-	 * @param {String} domain The Punycode domain name to convert to Unicode.
-	 * @returns {String} The Unicode representation of the given Punycode
-	 * string.
 	 */
+
 	function toUnicode(domain) {
 		return mapDomain(domain, function(string) {
 			return regexPunycode.test(string)
@@ -435,7 +318,129 @@
 	}
 
 
+function createConfusableMatrix()
+{	
+	var ConfusableMatrix = new Array();
+	
+	ConfusableMatrix = [
+							['ə' , 'ә'],
+							['а' , 'a'],
+							['o' , 'ο' , 'о'],
+							['s' , 'ѕ'],
+							['x' , 'х'],
+							['æ' , 'ӕ'],
+							['i' , 'і'],
+							['j' , 'ј'],
+							['p' , 'р'],
+							['c' , 'с'],
+							['y' , 'у'],
+							['a' , 'ɑ'],
+							['ı' , 'ɩ'],
+							['ł' , 'ɫ'],
+							['l' , '1'],
+							['g','ɡ'],
+							['v','ѵ','ν'],
+							['b', 'ƅ']						
+				   		];
+
+	return ConfusableMatrix;
+}
+
+function findConfusable( confusion , susp)
+{
+	for (i=0; i<confusion.length;i++){
+		for (j=0; j<confusion[i].length;j++){
+			if (confusion[i][j] == susp){
+				return i;
+			}				
+		}
+	}
+	return -1;
+}
+
+function copypath(path)
+{
+	var newpath = new Array();
+	var k = 0;
+	for(k = 0; k < path.length ; k++) 
+	{
+		newpath.push(path[k]);
+	}
+	return newpath;
+}
+
+function arr2str(path)
+{
+	var i;
+	var str = '';
+	for(i = 0; i < path.length; i++)
+	{
+		str += path[i];
+	}
+	return str;
+}
+
+
+function permute(confusion , domain , path , index , listOfUrls)
+{	
+	if (index >= domain.length)
+	{
+		listOfUrls.push( arr2str(path) );
+		return;
+	}	
+	else
+	{
+		susp = domain[index];
+		var row = -1;
+		row = findConfusable(confusion , susp);
+		
+		if(row == -1)
+		{
+			var newpath = path;
+			newpath.push(susp);
+			permute( confusion, domain, newpath, 
+					 index + 1, listOfUrls);
+		}
+		else
+		{
+			var j = 0;
+			for(j = 0; j < confusion[row].length ; j++)
+			{
+				var newpath = copypath(path);
+				newpath.push(confusion[row][j]);
+				permute(confusion , domain , newpath , 
+						index + 1,listOfUrls);
+			}
+		}
+	}	
+}
+
+function str2arr(path)
+{
+	var arr = new Array();
+	for(var i = 0; i < path.length; i++)
+	{
+		arr[i] = path[i];
+	}
+	return arr;
+}
+
+function checkURL(URL)
+{
+	var url = str2arr(URL);
+	
+	confusion = createConfusableMatrix();
+	
+	var path = new Array();
+	var spoofedUrls = new Array();
+	
+	permute(confusion, url,  path , 0 , spoofedUrls);
+	console.log(spoofedUrls.length);		
+	
+}
+
 function isSpoofed(uniUrl){
+	checkURL(uniUrl);
 	return true;
 };
 
@@ -463,9 +468,11 @@ function checkForSpoofedUrl(tabId, changeInfo, tab)
 			return;
 		}
 	}
+	var uniUrl = '';
 	var uniUrl = toUnicode(domain);
+	isSpoofed(uniUrl);
+	
 };
-
 
 // Listen for any changes to the URL of any tab.
 chrome.tabs.onUpdated.addListener(checkForSpoofedUrl);

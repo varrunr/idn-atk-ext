@@ -1,4 +1,9 @@
 /* 
+ *
+ * Authors: Varrun Ramani <varrunr@gmail.com>
+ * 			Rohit Mathew <rohitjmathew@gmail.com>
+ *			Mengli Yuan <ymenglifall@gmail.com>
+ *
  * Puncode conversion code written by @mathias
  * http://mths.be/punycode
  *

@@ -2,21 +2,24 @@
 	"name": "idn-atk-ext",
 	"version": "1.0",
 	"manifest_version": 2,
-	"description": "An extension to prevent IDN Homograph attacks",  
+	"description": "An extension to prevent IDN Homograph attacks",
+	"icons": { "128":"icon128.gif"},
 	"background": { 
 		"scripts": ["myscript.js"] 
 		},
 	"permissions": [
-		"tabs", "http://*/*"
+		"tabs", "http://*/*",
+		"webRequest",
+		"webRequestBlocking"
   	],
 	"chrome_url_overrides" : {
 		"newtab": "newtabOverride.html"
   	},
     "content_scripts": [
     	{
-		 "matches": ["http://*/*"],
+		 "matches": ["https://*/*"],
 		 "js": ["inject.js"],
-		 "run_at": "document_start"
+		 "run_at": "document_end"
     	}
   	]
 }

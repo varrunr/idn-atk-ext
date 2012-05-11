@@ -332,14 +332,19 @@
 		});
 	}
 	
-function getranking(reqUrl)
-{
+function getranking(reqUrl){
+	
+	/**
+	 * Sends request to the Alexa API to fetch the ranking of the url
+	 */
+	
 	var req;
 	req=new XMLHttpRequest();
 	req.open(	"GET",
 				"http://data.alexa.com/data?"+"cli=10&"+"url="+reqUrl,
 				false);
 	req.send(null);
+	
 	var ranking=req.responseXML.getElementsByTagName('POPULARITY');
 	if(ranking[0] == undefined){ 
 		return -1;
@@ -354,8 +359,14 @@ function getranking(reqUrl)
 	}
 }
 
-function createConfusableMatrix()
-{	
+function createConfusableMatrix(){
+	
+	/**
+	 * Loads the list of confusable unicode
+	 * characters into the memory.
+	 * Source: http://unicode.org/reports/tr36/confusables.txt
+	 */
+	
 	var ConfusableMatrix = new Array();
 	
 	ConfusableMatrix = [
@@ -371,19 +382,31 @@ function createConfusableMatrix()
 							['c' , 'с'],
 							['y' , 'у'],
 							['a' , 'ɑ'],
-							['ı' , 'ɩ'],
+							['ɩ','l','1'],
 							['ł' , 'ɫ'],
-							['l' , '1'],
 							['g','ɡ'],
 							['v','ѵ','ν'],
-							['b', 'ƅ']						
+							['b', 'ƅ'],
+							['m','rn'],
+							['p','ρ','р'],
+							['r','г'],
+							['n','ո'],
+							['h','հ'],
+							['u','ս'],
+							['f','ք'],
+							['y','ყ'],
+							['-','‐','‒']									
 				   		];
-
 	return ConfusableMatrix;
 }
 
-function findConfusable( confusion , susp)
-{
+function findConfusable( confusion , susp){
+
+	/**
+	 * Find and return the the list of of confusable
+	 * characters for a given suspicious character
+	 */
+	 
 	for (i=0; i<confusion.length;i++){
 		for (j=0; j<confusion[i].length;j++){
 			if (confusion[i][j] == susp){
@@ -394,8 +417,8 @@ function findConfusable( confusion , susp)
 	return -1;
 }
 
-function copypath(path)
-{
+function copypath(path){
+	/* Creating a copy of an array */
 	var newpath = new Array();
 	var k = 0;
 	for(k = 0; k < path.length ; k++) 
@@ -405,8 +428,8 @@ function copypath(path)
 	return newpath;
 }
 
-function arr2str(path)
-{
+function arr2str(path){
+	/* Convert array to string */
 	var i;
 	var str = '';
 	for(i = 0; i < path.length; i++)
@@ -416,11 +439,26 @@ function arr2str(path)
 	return str;
 }
 
+function str2arr(path){
+	/* Convert string to array */
+	var arr = new Array();
+	for(var i = 0; i < path.length; i++)
+	{
+		arr[i] = path[i];
+	}
+	return arr;
+}
 
 function permute(confusion , domain , path , index , listOfUrls)
 {	
+	/* 
+	 * Permutes the given domain by substitutinga visually
+	 * ambiguous characters by their list of confusables
+	 */
+	 
 	if (index >= domain.length)
 	{
+		/* Base case */
 		listOfUrls.push( arr2str(path) );
 		return;
 	}	
@@ -428,10 +466,12 @@ function permute(confusion , domain , path , index , listOfUrls)
 	{
 		susp = domain[index];
 		var row = -1;
+		/* Return list of confusables */
 		row = findConfusable(confusion , susp);
 		
 		if(row == -1)
 		{
+			/* If character is not a confusable */
 			var newpath = path;
 			newpath.push(susp);
 			permute( confusion, domain, newpath, 
@@ -439,6 +479,7 @@ function permute(confusion , domain , path , index , listOfUrls)
 		}
 		else
 		{
+			/* If character is confusable */
 			var j = 0;
 			for(j = 0; j < confusion[row].length ; j++)
 			{
@@ -451,43 +492,43 @@ function permute(confusion , domain , path , index , listOfUrls)
 	}	
 }
 
-function str2arr(path)
-{
-	var arr = new Array();
-	for(var i = 0; i < path.length; i++)
-	{
-		arr[i] = path[i];
-	}
-	return arr;
-}
-
 function checkURL(URL,tld)
 {
 	var url = str2arr(URL);
+	
 	
 	confusion = createConfusableMatrix();
 	
 	var path = new Array();
 	var spoofedUrls = new Array();
 	
+	/* Permute url and store in spoofedUrls */
 	permute(confusion, url,  path , 0 , spoofedUrls);
+	console.log("Number of permutations: " + spoofedUrls.length);
+	
 	
 	var rankings = new Array();
 	var idnattacks = new Array();
 	var  i = 0;
 	
 	for(i = 0;i<spoofedUrls.length;i++){
+		/* Convert Unicode to Punycode to send request */
 		var pUrl = toASCII( spoofedUrls[i]+ '.' + tld);
+		/* Get Rank */
 		var rank = getranking(pUrl);
 		if(rank != -1)
 		{
+			/* If website exists */
 			idnattacks.push(pUrl);
 			rankings.push(rank);
-			console.log('Unicode:'+ spoofedUrls[i] + tld + ' Punycode:' + toASCII(pUrl) + ' rank:' + rank);
+			console.log(' Unicode:'+ spoofedUrls[i] + '.' + tld + 
+						' Punycode:' + toASCII(pUrl) + 
+						' Rank:' + rank);
 		}
 	}
-	// TODO: Sort them
-	// Send message to UI to display
+
+	// TODO: Send message to UI to display
+	
 	if(idnattacks.length > 0){
 	console.log('This url can be confused with ' + idnattacks.length + ' other URLS. Blocking Access');
 	}
@@ -505,14 +546,16 @@ function isSpoofed(uniUrl,tld){
 
 function checkForSpoofedUrl2(requestUrl)
 {
-	// Get url from tab
+	
 	if(requestUrl.length >= 9)
 	{
+		/* Check if the url is a chrome internal call */
 		if(requestUrl.substr(0,9) == 'chrome://'){
 			return false;
 		}
 	}
 	
+	/* Obtain only the domain name from url */
 	var lnk = document.createElement('a');
 	lnk.href = requestUrl;
 	var domain = (lnk.host.match(/([^.]+)\.\w{2,3}(?:\.\w{2})?$/) || [])[0];
@@ -520,6 +563,9 @@ function checkForSpoofedUrl2(requestUrl)
 		return false;
 	}
 	
+	/* Check if the url is an international domain
+	 * i.e if it is in Punycode
+	 */
 	var prefix = 'na';
 	if(domain.length >= 4){
 		prefix = domain.substring(0,4);
@@ -528,12 +574,21 @@ function checkForSpoofedUrl2(requestUrl)
 		}
 	}
 	console.log(domain + ' is an international domain');
+	
+	/* Split domain into the server and top level domain
+	 * This is so that the tld need not be permuted
+	 */
+	 
 	var tld = domain.split('.', 2)[1];
 	var dName = domain.split('.',2)[0];
 	if( tld.length < 3){
 		return false;
 	}
+	
+	/* Convert the punycoded URL to Unicode */
 	var uniUrl = toUnicode(dName);
+	
+	/* If the URL is spoofed prevent access */
 	if(isSpoofed(uniUrl, tld)){
 		return true;
 	}
@@ -542,9 +597,11 @@ function checkForSpoofedUrl2(requestUrl)
 	}
 };
 
+/* Listen for web requests */
 chrome.webRequest.onBeforeRequest.addListener(
-  function(details) { 
+  function(details) {
   return {cancel: checkForSpoofedUrl2(details.url)}; 
   },
   {urls: ["http://*/*"]},
   ["blocking"]);
+  

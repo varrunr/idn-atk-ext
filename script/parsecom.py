@@ -43,6 +43,14 @@ def toUnicode(punycode):
 	except UnicodeError:
 		return 'Bad Punycode'
 
+def isConfusable(conf , char):
+	for row in range(0,len(conf)):
+		for col in range(0,len(conf[row])):
+			if conf[row][col] == char:
+				return row
+	
+	return 0
+
 def isSuspicious(domain):
 	return True
 

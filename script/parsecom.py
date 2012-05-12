@@ -45,6 +45,9 @@ def read_file(filename):
 
 	f_intdom.close()
 	f_unidom.close()
-		
-confusables = create_confusables()
-read_file('inp')
+
+def main():	
+	confusables = create_confusables()
+	read_file('inp')
+
+if __name__ == '__main__': main()

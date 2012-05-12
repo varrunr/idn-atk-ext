@@ -32,14 +32,34 @@ def create_confusables():
 			   		];
 	return ConfusableMatrix;
 
+def toUnicode(punycode):
+	
+	try:
+
+		""" Convert punycode to unicode """
+		uniUrl = codecs.lookup('idna').decode(punycode)[0]
+		return uniUrl
+	
+	except UnicodeError:
+		return 'Bad Punycode'
+
+def isSuspicious(domain):
+	return True
+
 def read_file(filename):
+	
 	f_intdom = open(filename,'r')
 	f_unidom = codecs.open('UNIDOM', 'w', encoding='utf-16')
+	
 	for domain in f_intdom:
 		try:
+			
 			domain = domain[0:len(domain) - 1].lower().encode('ascii')
-			uniUrl = codecs.lookup('idna').decode(domain)[0]
-			f_unidom.write(uniUrl+'\n')
+			uniUrl = toUnicode(domain)
+			
+			if isSuspicious(domain):
+				f_unidom.write( uniUrl + '\n')
+		
 		except UnicodeError:
 			print "Unicode Error"
 

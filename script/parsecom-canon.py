@@ -140,34 +140,31 @@ def writelist(f,l):
     for i in l:
         f.write(i+'\n')
 
-def main():	
+def main():
+
     input_file = './data/testcase'
     sorted_out_file = './data/sorted_output'
     unsorted_out_file = './data/unsorted_output'
     
-    # Open files for writing
+    """ Open files for writing """
     f_sorted = codecs.open( sorted_out_file , 'w', encoding='utf-8')
     f_unsorted = codecs.open( unsorted_out_file , 'w', encoding='utf-8')
     
-    # load dot_com_punyurl & dot_com_uniurl
+    """ Load urls and convert to unicode """
     load_uniurls(input_file, None , False)
     
-    # Do some crap
-    #for i in dot_com_uniurl:
-    #    print canonicalize_str(i)
-    #return
-
-    # Write unsorted data
+    """ Write unsorted data """
     writelist(f_unsorted , dot_com_uniurl)
     f_unsorted.close()
 
-    # Sort database of urls using custom comparator
+    """ Sort database of urls using custom comparator """
     dot_com_uniurl.sort(cmp=canonical_cmp)
     
-    # Write sorted data
+    """ Write sorted data """
     writelist(f_sorted , dot_com_uniurl)
     f_sorted.close()
     
+    """ Detect attacks """
     for i in range(0,len(dot_com_uniurl)-1):
         if canonicalize_str(dot_com_uniurl[i]) == canonicalize_str(dot_com_uniurl[i+1]):
             print "ATTACK: %s ; %s" % ( dot_com_uniurl[i] , dot_com_uniurl[i+1] )

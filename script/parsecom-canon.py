@@ -3,6 +3,8 @@ import codecs
 import urllib
 import urllib2
 import xml.etree.ElementTree as ET
+import sys
+import time
 
 dot_com_uniurl = []
 dot_com_punyurl = []
@@ -141,33 +143,51 @@ def writelist(f,l):
         f.write(i+'\n')
 
 def main():
-
+    
     input_file = './data/testcase'
+    if len(sys.argv) > 1:
+        input_file = str(sys.argv[1])
+    else:
+        print "Please specify an input file"
+        return
+    
+    print "Timing started"
+    start_time = time.time()
+    
     sorted_out_file = './data/sorted_output'
     unsorted_out_file = './data/unsorted_output'
-    
-    """ Open files for writing """
+    attack_file = './data/attack_file'
+
+    print """ Open files for writing """
     f_sorted = codecs.open( sorted_out_file , 'w', encoding='utf-8')
     f_unsorted = codecs.open( unsorted_out_file , 'w', encoding='utf-8')
+    f_attack = codecs.open( attack_file , 'w' , encoding='utf-8')
     
-    """ Load urls and convert to unicode """
+    print """ Load urls and convert to unicode """
     load_uniurls(input_file, None , False)
     
-    """ Write unsorted data """
+    print """ Write unsorted data """
     writelist(f_unsorted , dot_com_uniurl)
     f_unsorted.close()
 
-    """ Sort database of urls using custom comparator """
+    print """ Sort database of urls using custom comparator """
     dot_com_uniurl.sort(cmp=canonical_cmp)
     
-    """ Write sorted data """
+    print """ Write sorted data """
     writelist(f_sorted , dot_com_uniurl)
     f_sorted.close()
     
-    """ Detect attacks """
+    print """ Detect attacks \n"""
     for i in range(0,len(dot_com_uniurl)-1):
         if canonicalize_str(dot_com_uniurl[i]) == canonicalize_str(dot_com_uniurl[i+1]):
-            print "ATTACK: %s ; %s" % ( dot_com_uniurl[i] , dot_com_uniurl[i+1] )
+            msg =  "ATTACK: %s ; %s" % ( dot_com_uniurl[i] , dot_com_uniurl[i+1] )
+            f_attack.write(msg + "\n")
+    
+    end_time = time.time()
+    time_taken = (end_time - start_time) / 3600 
+    print "\n -- TIME TAKEN : %f minutes-- \n " % time_taken
+    print """THE END"""
+    
     return
     
 if __name__ == '__main__': main()
